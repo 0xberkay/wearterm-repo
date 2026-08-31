@@ -1,0 +1,19 @@
+#!/bin/sh
+# wt-clipopen - hand whatever is on the clipboard to the system as a uri.
+# Usage: wt-clipopen [uri]
+set -eu
+
+target=${1:-}
+[ -n "$target" ] || target=$(wt-clipboard | head -n 1)
+target=$(printf '%s' "$target" | tr -d '\r\n' | sed 's/^ *//; s/ *$//')
+
+[ -n "$target" ] || { echo "wt-clipopen: clipboard is empty" >&2; exit 1; }
+
+case "$target" in
+  *://*) ;;
+  *.*) target="https://$target" ;;
+  *) echo "wt-clipopen: not a uri: $target" >&2; exit 1 ;;
+esac
+
+printf 'opening %s\n' "$target"
+wt-open "$target"

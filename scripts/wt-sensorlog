@@ -1,0 +1,35 @@
+#!/bin/sh
+# wt-sensorlog - sample one sensor on an interval into a csv.
+# Usage: wt-sensorlog <sensor> [-n samples] [-i seconds] [-o file]
+# `wt-sensor list` names the sensors this watch has.
+set -eu
+
+sensor=${1:-}
+[ -n "$sensor" ] || { wt-sensor list; exit 2; }
+shift
+
+samples=10
+interval=5
+out="$HOME/$sensor.csv"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -n) samples=${2:?-n needs a count}; shift 2 ;;
+    -i) interval=${2:?-i needs seconds}; shift 2 ;;
+    -o) out=${2:?-o needs a path}; shift 2 ;;
+    *) echo "wt-sensorlog: unknown option: $1" >&2; exit 2 ;;
+  esac
+done
+
+[ -f "$out" ] || printf 'time,sensor,values\n' > "$out"
+
+i=1
+while [ "$i" -le "$samples" ]; do
+  reading=$(wt-sensor "$sensor" 2>/dev/null | tr '\n' ' ' | tr -s ' ' | sed 's/,/ /g; s/ *$//')
+  printf '%s,%s,%s\n' "$(date '+%Y-%m-%dT%H:%M:%S')" "$sensor" "$reading" >> "$out"
+  printf '%s %s\n' "$i" "$reading"
+  i=$((i + 1))
+  [ "$i" -le "$samples" ] && sleep "$interval"
+done
+
+printf 'wrote %s\n' "$out"

@@ -1,0 +1,25 @@
+#!/bin/sh
+# wt-remind - notification after a delay, without keeping a screen on.
+# Usage: wt-remind 10m stand up
+set -eu
+
+spec=${1:-}
+shift 2>/dev/null || true
+message=${*:-Reminder}
+
+[ -n "$spec" ] || { echo "usage: wt-remind <delay> <message>" >&2; exit 2; }
+
+number=$(printf '%s' "$spec" | tr -dc '0-9')
+unit=$(printf '%s' "$spec" | tr -dc 'smhSMH' | tr 'A-Z' 'a-z')
+[ -n "$number" ] || { echo "wt-remind: bad delay: $spec" >&2; exit 2; }
+
+case "$unit" in
+  h) seconds=$((number * 3600)) ;;
+  m) seconds=$((number * 60)) ;;
+  *) seconds=$number ;;
+esac
+
+printf 'reminding in %ss\n' "$seconds"
+sleep "$seconds"
+wt-vibrate -d 400 || true
+printf '%s' "$message" | wt-notify -t "Reminder" -i 4

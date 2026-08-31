@@ -1,0 +1,96 @@
+name: build-repo
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - packages.list
+      - scripts/**
+      - tools/build_repo.py
+      - .github/workflows/build-repo.yml
+  schedule:
+    # Weekly, so upstream security fixes reach the watch without manual work.
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: repo
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build packages
+        env:
+          # Release assets are free to serve and are CDN backed, so the index only ever holds
+          # URLs; nothing is committed to the repository itself.
+          ASSET_BASE: https://github.com/${{ github.repository }}/releases/download/repo
+        run: python tools/build_repo.py --out dist --asset-base "$ASSET_BASE"
+
+      - name: Publish archives to the rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view repo >/dev/null 2>&1 \
+            || gh release create repo --title "Package archives" --notes "Rolling package feed."
+
+          # One `gh release upload dist/*.zbd` trips GitHub's secondary rate limit: the
+          # catalogue is several hundred archives per arch and they all upload at once.
+          # Existing assets are skipped by name and size instead. A package that actually
+          # changed changes its version, and the version is in the filename, so a match on
+          # both means the release already holds this exact archive.
+          gh release view repo --json assets \
+            --jq '.assets[] | "\(.name) \(.size)"' | sort > existing.txt
+
+          for path in dist/*.zbd; do
+            name=$(basename "$path")
+            if grep -qxF "$name $(stat -c %s "$path")" existing.txt; then
+              continue
+            fi
+            for attempt in 1 2 3 4 5; do
+              if gh release upload repo "$path" --clobber; then
+                break
+              fi
+              if [ "$attempt" = 5 ]; then
+                echo "::error::giving up on $name"
+                exit 1
+              fi
+              sleep $((attempt * 30))
+            done
+            sleep 1
+          done
+
+      - name: Collect the index and the scripts for Pages
+        run: |
+          mkdir -p site/scripts
+          cp dist/index-*.json site/
+          # Regenerated rather than trusted: the app verifies every script against the
+          # hash in this index, so a hand-edited script and a stale index would just fail
+          # to install.
+          sh scripts/build-index.sh
+          cp scripts/index.json scripts/wt-* site/scripts/
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

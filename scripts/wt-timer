@@ -1,0 +1,37 @@
+#!/bin/sh
+# wt-timer - countdown on the wrist. Vibrates and speaks when it runs out.
+# Usage: wt-timer 5m tea  (suffix s, m or h; bare number means seconds)
+set -eu
+
+spec=${1:-}
+label=${2:-Timer}
+
+if [ -z "$spec" ]; then
+  echo "usage: wt-timer <duration> [label]" >&2
+  exit 2
+fi
+
+number=$(printf '%s' "$spec" | tr -dc '0-9')
+unit=$(printf '%s' "$spec" | tr -dc 'smhSMH' | tr 'A-Z' 'a-z')
+[ -n "$number" ] || { echo "wt-timer: bad duration: $spec" >&2; exit 2; }
+
+case "$unit" in
+  h) seconds=$((number * 3600)) ;;
+  m) seconds=$((number * 60)) ;;
+  *) seconds=$number ;;
+esac
+
+printf '%s: %ss\n' "$label" "$seconds"
+remaining=$seconds
+while [ "$remaining" -gt 0 ]; do
+  step=$remaining
+  [ "$step" -gt 30 ] && step=30
+  sleep "$step"
+  remaining=$((remaining - step))
+  printf '\r%ss left   ' "$remaining"
+done
+printf '\n'
+
+wt-vibrate -d 800 || true
+echo "$label finished" | wt-notify -t "Timer" -i 2 || true
+wt-tts "$label finished" || true

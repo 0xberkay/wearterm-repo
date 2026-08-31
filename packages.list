@@ -1,0 +1,179 @@
+# Packages published by the zbd repository. Dependencies are resolved automatically, so only
+# the things a user would actually ask for belong here.
+#
+# A `# category:` line opens a section. The category travels into the index and is what the
+# watch groups by — a flat list of a hundred names is unusable on a screen that fits six rows,
+# so every entry below has to sit under a heading.
+#
+# Watch storage is the budget. Packages over ~40 MB stay out by default; vim and the explicitly
+# requested development toolchains below are deliberate exceptions.
+
+# category: Shell
+bash
+busybox
+coreutils
+ncurses
+ncurses-utils
+readline
+libandroid-support
+zsh
+fish
+dash
+bash-completion
+rlwrap
+
+# category: Files
+grep
+sed
+gawk
+findutils
+less
+most
+diffutils
+patch
+which
+file
+tree
+moreutils
+dos2unix
+pv
+nnn
+mc
+ranger
+
+# category: Archives
+tar
+gzip
+bzip2
+xz-utils
+zstd
+unzip
+zip
+p7zip
+unrar
+
+# category: Editors
+vim
+nano
+micro
+hexcurse
+
+# category: Sessions
+tmux
+screen
+asciinema
+
+# category: System
+htop
+procps
+ncdu
+util-linux
+lsof
+strace
+time
+progress
+tsu
+neofetch
+
+# category: Search
+ripgrep
+fzf
+fd
+silversearcher-ag
+
+# category: Network
+curl
+wget
+wget2
+openssh
+mosh
+ca-certificates
+openssl
+openssl-tool
+rsync
+netcat-openbsd
+socat
+aria2
+croc
+dnsutils
+iproute2
+whois
+
+# category: Security
+nmap
+rustscan
+dirb
+testssl.sh
+crunch
+dnsmap
+mdns-scan
+sslscan
+yara
+ssdeep
+sleuthkit
+zzuf
+ripsecrets
+steghide
+virustotal-cli
+proxychains-ng
+tor
+torsocks
+traceroute
+net-tools
+minisign
+chntpw
+rizin
+shellcheck
+shellharden
+weggli
+age
+rage
+gnupg
+signify
+argon2
+scrypt
+sqlcipher
+oathtool
+pwgen
+wuzz
+wrk
+vegeta
+net-snmp
+sshping
+nss-utils
+upx
+vbindiff
+
+# category: Development
+git
+git-lfs
+tig
+python
+perl
+lua54
+make
+entr
+jq
+yq
+sqlite
+bc
+wcalc
+units
+golang
+nodejs
+cmake
+
+# category: Docs
+mandoc
+tealdeer
+
+# category: Fun
+cowsay
+figlet
+fortune
+sl
+cmatrix
+toilet
+jp2a
+bat
+eza

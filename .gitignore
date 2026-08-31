@@ -1,0 +1,4 @@
+# Build output. The archives are produced by the build-repo workflow and published as
+# Release assets, so committing them would only bloat the history.
+dist/
+__pycache__/

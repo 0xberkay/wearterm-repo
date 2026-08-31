@@ -1,0 +1,20 @@
+#!/bin/sh
+# wt-status - one screen of watch state: battery, network, storage.
+# Usage: wt-status [-n]  (-n also posts the summary as a notification)
+set -eu
+
+notify=0
+[ "${1:-}" = "-n" ] && notify=1
+
+battery=$(wt-battery 2>/dev/null || echo "battery: unavailable")
+network=$(wt-net 2>/dev/null || echo "net: unavailable")
+system=$(wt-fetch --plain 2>/dev/null || true)
+
+summary=$(printf '%s\n%s\n' "$battery" "$network")
+
+printf '%s\n' "$summary"
+[ -n "$system" ] && printf '%s\n' "$system"
+
+if [ "$notify" -eq 1 ]; then
+  printf '%s' "$summary" | wt-notify -t "Status" -i 7
+fi

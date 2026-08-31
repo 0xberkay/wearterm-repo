@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "scripts": [
+    {
+      "name": "wt-battwatch",
+      "description": "buzz and notify when charge crosses a threshold.",
+      "usage": "wt-battwatch [-l low] [-i seconds]",
+      "size": 974,
+      "sha256": "f337a77b9572e87cd15e094758fd50cadf07d482638de9f9c1eca152b58ebd64"
+    },
+    {
+      "name": "wt-clipopen",
+      "description": "hand whatever is on the clipboard to the system as a uri.",
+      "usage": "wt-clipopen [uri]",
+      "size": 519,
+      "sha256": "af22be08377ebd14c30b4d13d3e056015157a4d789a9ff72ad8953f841a9796d"
+    },
+    {
+      "name": "wt-pomodoro",
+      "description": "work/break cycles, each end marked by a buzz and a notification.",
+      "usage": "wt-pomodoro [-w work_min] [-b break_min] [-r rounds]",
+      "size": 929,
+      "sha256": "0b9d119e1fd13a15d956549610b8e45a54b955f9bf5a06840d72047d3c899ced"
+    },
+    {
+      "name": "wt-remind",
+      "description": "notification after a delay, without keeping a screen on.",
+      "usage": "wt-remind 10m stand up",
+      "size": 693,
+      "sha256": "b7a7b1865d1e836ea2943124b27b2044b7931b90f47dfa1ce663803453e3aa4d"
+    },
+    {
+      "name": "wt-sensorlog",
+      "description": "sample one sensor on an interval into a csv.",
+      "usage": "wt-sensorlog <sensor> [-n samples] [-i seconds] [-o file]",
+      "size": 984,
+      "sha256": "29e57571d2e77b9c7f007bcb6d2a8ae026114e2ad66076ee38899bdf4e37935e"
+    },
+    {
+      "name": "wt-status",
+      "description": "one screen of watch state: battery, network, storage.",
+      "usage": "wt-status [-n]  (-n also posts the summary as a notification)",
+      "size": 578,
+      "sha256": "2d8e721a2dec2936eab3e4a376d8d815a4aa7b435da5a29eeb2baa49bab29c0f"
+    },
+    {
+      "name": "wt-timer",
+      "description": "countdown on the wrist. Vibrates and speaks when it runs out.",
+      "usage": "wt-timer 5m tea  (suffix s, m or h; bare number means seconds)",
+      "size": 944,
+      "sha256": "6ebc551ac1c7eb94f9a615114620d89e60141808bb8b07b49d7c7e906e34efdf"
+    }
+  ]
+}
