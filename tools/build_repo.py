@@ -319,6 +319,28 @@ def asset_version(version: str) -> str:
     return version.replace(":", ".")
 
 
+def _reproducible(info: tarfile.TarInfo) -> tarfile.TarInfo:
+    """
+    Strips everything that changes between runs but not between builds.
+
+    Without this every weekly run produces different bytes for identical packages: the gzip
+    header carries a timestamp and the tar entries carry the mtimes of whatever directory
+    the extracted .deb landed in. The archives then all change size by a few bytes, the
+    workflow's name+size comparison can no longer skip them, and every package is re-uploaded
+    on every run -- which is exactly how the Release and the published index drifted apart.
+    """
+    info.mtime = 0
+    info.uid = 0
+    info.gid = 0
+    info.uname = ""
+    info.gname = ""
+    if info.isdir():
+        info.mode = 0o755
+    elif not info.issym():
+        info.mode = 0o755 if info.mode & 0o100 else 0o644
+    return info
+
+
 def build_archive(package: Package, staging: Path, manifest: dict, out: Path) -> Path:
     """Writes `<name>_<version>_<arch>.zbd`: gzip so the client needs no extra dependency."""
     archive_path = (
@@ -326,11 +348,14 @@ def build_archive(package: Package, staging: Path, manifest: dict, out: Path) ->
     )
     manifest_bytes = json.dumps(manifest, indent=2).encode()
 
-    with tarfile.open(archive_path, "w:gz") as archive:
-        info = tarfile.TarInfo("manifest.json")
-        info.size = len(manifest_bytes)
-        archive.addfile(info, io.BytesIO(manifest_bytes))
-        archive.add(staging, arcname="files", recursive=True)
+    # mtime=0 and an empty gzip filename make the archive a pure function of its contents.
+    with archive_path.open("wb") as raw:
+        with gzip.GzipFile(fileobj=raw, mode="wb", filename="", mtime=0, compresslevel=9) as gz:
+            with tarfile.open(fileobj=gz, mode="w", format=tarfile.GNU_FORMAT) as archive:
+                info = _reproducible(tarfile.TarInfo("manifest.json"))
+                info.size = len(manifest_bytes)
+                archive.addfile(info, io.BytesIO(manifest_bytes))
+                archive.add(staging, arcname="files", recursive=True, filter=_reproducible)
     return archive_path
 
 

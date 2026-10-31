@@ -1,0 +1,61 @@
+name: reindex
+
+# Repairs a Release/index drift without rebuilding anything. The metadata (versions, deps,
+# licences, categories) is kept from the published index; only the archive hashes and sizes
+# are rewritten, from the archives the Release actually serves. Use it when clients report
+# "checksum mismatch" after a run whose Pages deploy failed: the Release moved, the index did
+# not, and no amount of `zbd update` on the watch can fix a stale file on the server.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  reindex:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Rewrite the indexes from the Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/reindex.py --out site
+
+      - name: Add the scripts to the site
+        # Pages is replaced wholesale by a deploy, so the script catalogue has to travel with
+        # the indexes or the Scripts screen loses its feed.
+        run: |
+          mkdir -p site/scripts
+          sh scripts/build-index.sh
+          cp scripts/index.json scripts/wt-* site/scripts/
+
+      - name: Verify the result
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python tools/reindex.py --source site --check
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: reindex
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

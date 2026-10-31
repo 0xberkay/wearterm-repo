@@ -71,6 +71,15 @@ jobs:
             sleep 1
           done
 
+      - name: Verify the Release matches the index
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # The archives and the index have to describe the same bytes, or every client dies
+          # on "checksum mismatch". This runs before the deploy, so a half-finished upload
+          # can never replace a good index.
+          python3 tools/reindex.py --source dist --check
+
       - name: Collect the index and the scripts for Pages
         run: |
           mkdir -p site/scripts
